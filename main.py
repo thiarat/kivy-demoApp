@@ -13,12 +13,13 @@ from kivy.uix.textinput import TextInput
 from kivy.core.window import Window
 from kivy.metrics import dp
 
-# ตั้งค่าหน้าจอจำลองแบบมือถือ
+# ตั้งค่าขนาดหน้าจอจำลอง (หน้าจอแนวตั้งขนาดมาตรฐานมือถือ)
 Window.size = (360, 640)
+# กำหนดสีพื้นหลังเริ่มต้นของหน้าต่างแอป (สีเทาเข้มเกือบดำ)
 Window.clearcolor = (0.05, 0.05, 0.05, 1)
 
 # ฐานข้อมูลภาพยนตร์ 10 เรื่อง (ชี้ไปที่โฟลเดอร์ img/)
-movie_db = [
+movie_db = [ 
     {"title": "Spider-Man: No Way Home", "poster": "img/spiderman.jpg", "genre": "Action / Sci-Fi", "duration": "148 Min", "synopsis": "Peter Parker's life is turned upside down when his identity is revealed.", "showtimes": ["10:30", "13:45", "17:00", "20:15"]},
     {"title": "Thor: Ragnarok", "poster": "img/thor.jpg", "genre": "Action / Fantasy", "duration": "130 Min", "synopsis": "Thor must race against time to stop the destruction of Asgard.", "showtimes": ["11:00", "14:30", "18:00"]},
     {"title": "A Whisker Away", "poster": "img/whisker.jpg", "genre": "Anime / Romance", "duration": "104 Min", "synopsis": "A girl transforms into a cat to get close to her crush.", "showtimes": ["12:00", "15:15", "19:00"]},
@@ -28,38 +29,43 @@ movie_db = [
     {"title": "Interstellar", "poster": "img/interstellar.jpg", "genre": "Sci-Fi / Drama", "duration": "169 Min", "synopsis": "Explorers travel through a wormhole in space.", "showtimes": ["11:30", "15:00", "18:30"]},
     {"title": "The Dark Knight", "poster": "img/darkknight.jpg", "genre": "Action / Crime", "duration": "152 Min", "synopsis": "Batman faces his greatest threat: The Joker.", "showtimes": ["14:00", "17:30", "21:00"]},
     {"title": "Avatar: Way of Water", "poster": "img/avatar.jpg", "genre": "Action / Sci-Fi", "duration": "192 Min", "synopsis": "Jake Sully lives with his family on Pandora.", "showtimes": ["10:00", "14:30", "19:00"]},
-    {"title": "Demon Slayer", "poster": "img/demonslayer.jpg", "genre": "Anime / Action", "duration": "117 Min", "synopsis": "Tanjiro fights demons on the Mugen Train.", "showtimes": ["10:15", "13:30", "16:45"]}
+    {"title": "Demon Slayer", "poster": "img/demonslayer.jpg", "genre": "Anime / Action", "duration": "117 Min", "synopsis": "Tanjiro fights demons on the Mugen Train.", "showtimes": ["10:15", "13:30", "16:45"]} 
 ]
 
 class MovieHomeScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # 1. จัด Layout หลักแบบแนวตั้ง
         self.layout = BoxLayout(orientation='vertical', padding=dp(10), spacing=dp(10))
-        header = Label(text="MAJOR CLONE", font_size='26sp', size_hint_y=None, height=dp(60), color=(1, 0.8, 0, 1), bold=True)
+        # 2. ส่วนหัวของแอป (Header)
+        header = Label(text="MAJOR CLONE", font_size='26sp', size_hint_y=None,
+                      height=dp(60), color=(1, 0.8, 0, 1), bold=True)
         self.layout.add_widget(header)
-
-        self.search = TextInput(hint_text="Search movies...", size_hint_y=None, height=dp(45), multiline=False, background_color=(0.15, 0.15, 0.15, 1), foreground_color=(1, 1, 1, 1))
-        self.search.bind(text=self.on_search)
+        # 3. ช่องค้นหาภาพยนตร์ (Search Bar)
+        self.search = TextInput(hint_text="Search movies...", size_hint_y=None,
+                               height=dp(45), multiline=False)
+        self.search.bind(text=self.on_search) # เชื่อมฟังก์ชันค้นหา
         self.layout.add_widget(self.search)
-
+        # 4. ส่วนแสดงรายการหนังแบบ ScrollView
         self.scroll = ScrollView()
         self.grid = GridLayout(cols=2, spacing=dp(15), size_hint_y=None, padding=dp(5))
         self.grid.bind(minimum_height=self.grid.setter('height'))
-        
-        self.populate_grid(movie_db)
+        self.populate_grid(movie_db) # เรียกฟังก์ชันสร้างรายการหนัง
         self.scroll.add_widget(self.grid)
         self.layout.add_widget(self.scroll)
         self.add_widget(self.layout)
 
     def populate_grid(self, movies):
+        """ฟังก์ชันสำหรับสร้างตารางรายการหนัง"""
         self.grid.clear_widgets()
         for movie in movies:
             box = BoxLayout(orientation='vertical', size_hint_y=None, height=dp(280))
-            # ใช้ Image แทน AsyncImage เพื่อโหลดจากไฟล์ในเครื่อง
+            # ดึงรูปจาก img/ ตามที่ระบุในฐานข้อมูล
             img = Image(source=movie["poster"], allow_stretch=True, keep_ratio=True, size_hint_y=0.8)
-            btn = Button(text=movie["title"], size_hint_y=0.2, background_normal='', background_color=(0.1, 0.1, 0.1, 1), font_size='12sp')
+            btn = Button(text=movie["title"], size_hint_y=0.2, font_size='12sp')
             btn.bind(on_press=lambda inst, m=movie: self.go_details(m))
-            box.add_widget(img); box.add_widget(btn)
+            box.add_widget(img)
+            box.add_widget(btn)
             self.grid.add_widget(box)
 
     def on_search(self, instance, value):
@@ -76,68 +82,90 @@ class DetailsScreen(Screen):
         super().__init__(**kwargs)
         self.layout = BoxLayout(orientation='vertical')
         self.scroll = ScrollView()
+        # ส่วนคอนเทนต์หลัก
         self.content = BoxLayout(orientation='vertical', size_hint_y=None, padding=dp(20), spacing=dp(15))
         self.content.bind(minimum_height=self.content.setter('height'))
-        
+        # ประกาศ Widget รอไว้สำหรับอัปเดตข้อมูล
         self.img = Image(size_hint_y=None, height=dp(350))
         self.title = Label(font_size='22sp', bold=True, size_hint_y=None, height=dp(40), color=(1, 0.8, 0, 1))
         self.meta = Label(font_size='14sp', size_hint_y=None, height=dp(30), color=(0.7, 0.7, 0.7, 1))
         self.synop = Label(font_size='14sp', size_hint_y=None, halign='left')
+        # ตารางสำหรับวางปุ่มรอบฉาย (3 คอลัมน์)
         self.show_grid = GridLayout(cols=3, spacing=dp(10), size_hint_y=None)
-        
-        self.content.add_widget(self.img); self.content.add_widget(self.title)
-        self.content.add_widget(self.meta); self.content.add_widget(self.synop)
+        # เพิ่ม Widget ลงใน content
+        self.content.add_widget(self.img)
+        self.content.add_widget(self.title)
+        self.content.add_widget(self.meta)
+        self.content.add_widget(self.synop)
         self.content.add_widget(Label(text="SHOWTIMES", font_size='16sp', bold=True, size_hint_y=None, height=dp(40)))
         self.content.add_widget(self.show_grid)
         self.scroll.add_widget(self.content)
-        
-        back_btn = Button(text="BACK", size_hint_y=0.1, background_color=(0.2, 0.2, 0.2, 1), on_press=lambda x: setattr(self.manager, 'current', 'home'))
-        self.layout.add_widget(self.scroll); self.layout.add_widget(back_btn)
+        # ปุ่มย้อนกลับไปหน้าแรก
+        back_btn = Button(text="BACK", size_hint_y=0.1, background_color=(0.2, 0.2, 0.2, 1))
+        back_btn.bind(on_press=lambda x: setattr(self.manager, 'current', 'home'))
+        self.layout.add_widget(self.scroll)
+        self.layout.add_widget(back_btn)
         self.add_widget(self.layout)
 
     def update_ui(self):
         movie = App.get_running_app().booking_data['movie']
-        self.img.source = movie["poster"]; self.title.text = movie["title"]
-        self.meta.text = f"{movie['genre']} | {movie['duration']}"; self.synop.text = movie["synopsis"]
-        self.synop.text_size = (Window.width - dp(40), None); self.synop.texture_update()
+        self.img.source = movie["poster"]
+        self.title.text = movie["title"]
+        self.meta.text = f"{movie['genre']} | {movie['duration']}"
+        self.synop.text = movie["synopsis"]
+        self.synop.text_size = (Window.width - dp(40), None)
+        self.synop.texture_update()
         self.synop.height = self.synop.texture_size[1]
-        
         self.show_grid.clear_widgets()
         for t in movie["showtimes"]:
-            btn = Button(text=t, size_hint_y=None, height=dp(45), background_color=(0.3, 0.3, 0.3, 1))
+            btn = Button(text=t, size_hint_y=None, height=dp(45))
             btn.bind(on_press=lambda inst, time=t: self.go_seats(time))
             self.show_grid.add_widget(btn)
 
     def go_seats(self, time):
         App.get_running_app().booking_data['time'] = time
-        self.manager.get_screen('seats').update_ui(); self.manager.current = 'seats'
+        self.manager.get_screen('seats').update_ui()
+        self.manager.current = 'seats'
 
 class SeatSelectionScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.layout = BoxLayout(orientation='vertical', padding=dp(15), spacing=dp(10))
+        # ส่วนแสดงชื่อหนังและรอบฉายที่เลือก
         self.info_label = Label(text="", font_size='18sp', bold=True, size_hint_y=None, height=dp(50), color=(1, 0.8, 0, 1))
+        # ผังที่นั่งแบบตาราง 5 คอลัมน์
         self.seat_grid = GridLayout(cols=5, spacing=dp(10), size_hint_y=0.6)
         self.seats = []
-        
+        # วนลูปสร้างที่นั่งแถว A-D และเลข 1-5
         for row in ['A', 'B', 'C', 'D']:
             for col in range(1, 6):
                 seat_id = f"{row}{col}"
-                btn = ToggleButton(text=seat_id, background_normal='', background_down='', background_color=(0.2, 0.2, 0.2, 1), size_hint=(None, None), size=(dp(55), dp(55)))
-                btn.bind(on_release=self.on_seat_click) 
-                self.seat_grid.add_widget(btn); self.seats.append(btn)
-
+                btn = ToggleButton(
+                    text=seat_id,
+                    background_normal='',
+                    background_down='',
+                    background_color=(0.2, 0.2, 0.2, 1), # สีเทาเริ่มต้น
+                    size_hint=(None, None),
+                    size=(dp(55), dp(55))
+                )
+                btn.bind(on_release=self.on_seat_click)
+                self.seat_grid.add_widget(btn)
+                self.seats.append(btn)
+        # ส่วนสรุปจำนวนและราคา
         self.total_label = Label(text="Selected: 0 | Total: 0 THB", size_hint_y=0.1, font_size='18sp', bold=True)
+        # ปุ่มควบคุม
         nav = BoxLayout(size_hint_y=0.1, spacing=dp(10))
         self.confirm_btn = Button(text="CONFIRM", background_color=(0, 0.6, 0, 1), disabled=True)
         self.confirm_btn.bind(on_press=self.go_to_ticket)
         back_btn = Button(text="BACK")
         back_btn.bind(on_press=lambda x: setattr(self.manager, 'current', 'details'))
-        nav.add_widget(back_btn); nav.add_widget(self.confirm_btn)
-
+        nav.add_widget(back_btn)
+        nav.add_widget(self.confirm_btn)
         self.layout.add_widget(self.info_label)
         self.layout.add_widget(Label(text="--- SCREEN ---", size_hint_y=None, height=dp(30), color=(0.5, 0.5, 0.5, 1)))
-        self.layout.add_widget(self.seat_grid); self.layout.add_widget(self.total_label); self.layout.add_widget(nav)
+        self.layout.add_widget(self.seat_grid)
+        self.layout.add_widget(self.total_label)
+        self.layout.add_widget(nav)
         self.add_widget(self.layout)
 
     def update_ui(self):
@@ -146,44 +174,63 @@ class SeatSelectionScreen(Screen):
             self.info_label.text = f"{app.booking_data['movie']['title']} ({app.booking_data['time']})"
         app.booking_data['seats'] = []
         for s in self.seats:
-            s.state = 'normal'; s.background_color = (0.2, 0.2, 0.2, 1)
-        self.total_label.text = "Selected: 0 | Total: 0 THB"; self.confirm_btn.disabled = True
+            s.state = 'normal'
+            s.background_color = (0.2, 0.2, 0.2, 1)
+        self.total_label.text = "Selected: 0 | Total: 0 THB"
+        self.confirm_btn.disabled = True
 
     def on_seat_click(self, instance):
+        """จัดการเมื่อผู้ใช้กดเลือกหรือยกเลิกที่นั่ง"""
         app = App.get_running_app()
         if instance.state == 'down':
-            instance.background_color = (0.8, 0.1, 0.1, 1)
-            if instance.text not in app.booking_data['seats']: app.booking_data['seats'].append(instance.text)
+            instance.background_color = (0.8, 0.1, 0.1, 1) # เปลี่ยนเป็นสีแดงเมื่อเลือก
+            if instance.text not in app.booking_data['seats']:
+                app.booking_data['seats'].append(instance.text)
         else:
-            instance.background_color = (0.2, 0.2, 0.2, 1)
-            if instance.text in app.booking_data['seats']: app.booking_data['seats'].remove(instance.text)
+            instance.background_color = (0.2, 0.2, 0.2, 1) # กลับเป็นสีเทาเมื่อยกเลิก
+            if instance.text in app.booking_data['seats']:
+                app.booking_data['seats'].remove(instance.text)
+        # อัปเดตการแสดงผลราคาและปุ่มยืนยัน
         count = len(app.booking_data['seats'])
         self.total_label.text = f"Selected: {count} | Total: {count * 250} THB"
         self.confirm_btn.disabled = (count == 0)
 
     def go_to_ticket(self, instance):
-        self.manager.get_screen('ticket').update_ui(); self.manager.current = 'ticket'
+        """บันทึกข้อมูลและไปหน้าสรุปตั๋ว"""
+        self.manager.get_screen('ticket').update_ui()
+        self.manager.current = 'ticket'
 
 class TicketScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.layout = BoxLayout(orientation='vertical', padding=dp(30), spacing=dp(15))
+        # กล่องสำหรับแสดงรายละเอียดตั๋ว (Ticket Styling)
         self.ticket_box = BoxLayout(orientation='vertical', padding=dp(20), spacing=dp(10))
         self.movie_lbl = Label(font_size='24sp', bold=True, color=(1, 0.8, 0, 1))
         self.details_lbl = Label(font_size='16sp', halign='center')
+        # เพิ่มองค์ประกอบลงในกล่องตั๋ว
         self.ticket_box.add_widget(Label(text="--- MOVIE TICKET ---", color=(0.7, 0.7, 0.7, 1)))
-        self.ticket_box.add_widget(self.movie_lbl); self.ticket_box.add_widget(self.details_lbl)
-        home_btn = Button(text="BOOK MORE", size_hint_y=0.15, background_color=(0.8, 0.1, 0.1, 1), on_press=self.reset)
-        self.layout.add_widget(Label(text="BOOKING SUCCESSFUL!", font_size='22sp', bold=True, color=(0, 1, 0, 1), size_hint_y=0.2))
-        self.layout.add_widget(self.ticket_box); self.layout.add_widget(home_btn)
+        self.ticket_box.add_widget(self.movie_lbl)
+        self.ticket_box.add_widget(self.details_lbl)
+        # ปุ่มสำหรับเริ่มการจองใหม่
+        home_btn = Button(text="BOOK MORE", size_hint_y=0.15, background_color=(0.8, 0.1, 0.1, 1))
+        home_btn.bind(on_press=self.reset)
+        # แสดงหัวข้อความสำเร็จและเพิ่ม Widget ทั้งหมดลงหน้าจอ
+        self.layout.add_widget(Label(text="BOOKING SUCCESSFUL!", font_size='22sp', bold=True,
+                                   color=(0, 1, 0, 1), size_hint_y=0.2))
+        self.layout.add_widget(self.ticket_box)
+        self.layout.add_widget(home_btn)
         self.add_widget(self.layout)
 
     def update_ui(self):
+        """ดึงข้อมูลการจองทั้งหมดมาแสดงบนตั๋ว"""
         d = App.get_running_app().booking_data
         self.movie_lbl.text = d['movie']['title']
+        # แสดงเวลา รายชื่อที่นั่ง และคำนวณราคาสุทธิ (จำนวนที่นั่ง x 250)
         self.details_lbl.text = f"Time: {d['time']}\nSeats: {', '.join(d['seats'])}\nTotal Paid: {len(d['seats'])*250} THB"
 
     def reset(self, x):
+        """ล้างข้อมูลการจองและกลับสู่หน้าหลัก"""
         App.get_running_app().booking_data = {'movie': None, 'time': None, 'seats': []}
         self.manager.current = 'home'
 
